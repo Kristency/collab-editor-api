@@ -10,7 +10,7 @@ const server = app.listen(PORT, () => {
 	console.log(`serving on port ${PORT}`)
 })
 
-const io = socketio.listen(server)
+const io = socketio(server)
 
 io.on('connection', (socket) => {
 	let editorId = null
