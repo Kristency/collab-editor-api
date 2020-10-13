@@ -17,7 +17,7 @@ io.on('connection', (socket) => {
 
 	console.log(`new socket connection with id ${socket.id}`)
 	socket.on('send-text', (data) => {
-		io.in(editorId).emit('receive-text', data)
+		socket.broadcast.in(editorId).emit('receive-text', data)
 	})
 
 	socket.on('join-editor', (id) => {
