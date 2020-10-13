@@ -13,12 +13,11 @@ io.on('connection', (socket) => {
 	let editorId = null
 
 	console.log(`new socket connection with id ${socket.id}`)
-	socket.on('text', (data) => {
-		// console.log(data)
-		io.in(editorId).emit('text', data)
+	socket.on('send-text', (data) => {
+		io.in(editorId).emit('receive-text', data)
 	})
 
-	socket.on('create-editor', (id) => {
+	socket.on('join-editor', (id) => {
 		socket.join(id, () => {
 			editorId = id
 			console.log(`Joined editor with id ${id} successfully`)
