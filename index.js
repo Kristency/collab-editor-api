@@ -1,29 +1,52 @@
-const express = require('express')
-const socketio = require('socket.io')
-const cors = require('cors')
+const express = require('express');
+const socketio = require('socket.io');
+const cors = require('cors');
 
-const app = express()
-app.use(cors())
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom
+} = require('./utils/users');
 
-const PORT = process.env.PORT || 8080
+const app = express();
+app.use(cors());
+
+const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, () => {
-	console.log(`serving on port ${PORT}`)
-})
+  console.log(`serving on port ${PORT}`);
+});
 
-const io = socketio(server)
+const io = socketio(server);
 
 io.on('connection', (socket) => {
-	let editorId = null
+  console.log(`new socket connection with id ${socket.id}`);
 
-	console.log(`new socket connection with id ${socket.id}`)
-	socket.on('send-text', (data) => {
-		socket.broadcast.in(editorId).emit('receive-text', data)
-	})
+  socket.on('send-text', (data) => {
+    socket.broadcast.in(editorId).emit('receive-text', data);
+  });
 
-	socket.on('join-editor', (id) => {
-		socket.join(id, () => {
-			editorId = id
-			console.log(`Joined editor with id ${id} successfully`)
-		})
-	})
-})
+  socket.on('join-editor', ({ username, editorId }) => {
+    const { error, user } = addUser({ id: socket.id, username, editorId });
+
+    socket.join(user.editorId, () => {
+      console.log(
+        `${user.username} joined editor with id ${user.editorId} successfully`
+      );
+    });
+
+    socket.broadcast
+      .to(user.editorId)
+      .emit('message', `${user.username} has joined!`);
+
+    io.to(user.editorId).emit('user-list', getUsersInRoom(user.editorId));
+  });
+
+  socket.on('disconnect', () => {
+    const user = removeUser(socket.id);
+    if (user) {
+      io.to(user.editorId).emit('message', `${user.username} has left!`);
+      io.to(user.editorId).emit('user-list', getUsersInRoom(user.editorId));
+    }
+  });
+});
