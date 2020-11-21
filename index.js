@@ -22,8 +22,9 @@ const io = socketio(server);
 io.on('connection', (socket) => {
   console.log(`new socket connection with id ${socket.id}`);
 
-  socket.on('send-text', (data) => {
-    socket.broadcast.in(editorId).emit('receive-text', data);
+  socket.on('editor-state', (data) => {
+    const user = getUser(socket.id);
+    socket.broadcast.in(user.editorId).emit('editor-state', data);
   });
 
   socket.on('join-editor', ({ username, editorId }) => {
